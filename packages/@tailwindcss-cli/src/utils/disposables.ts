@@ -4,6 +4,20 @@ export function disposables() {
   let _disposables = new Set<Function>([])
 
   let api = {
+    queueMicrotask(cb: () => void) {
+      let shouldExecute = true
+
+      queueMicrotask(() => {
+        if (shouldExecute) {
+          cb()
+        }
+      })
+
+      return api.add(() => {
+        shouldExecute = false
+      })
+    },
+
     add(dispose: () => void) {
       _disposables.add(dispose)
 
