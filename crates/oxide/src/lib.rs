@@ -1,3 +1,4 @@
+use crate::glob::path_matches_globs;
 use crate::parser::Extractor;
 use bstr::ByteSlice;
 use cache::Cache;
@@ -444,9 +445,24 @@ pub fn scan_files(input: Vec<ChangedContent>, options: u8) -> Vec<String> {
     }
 }
 
-#[tracing::instrument(skip(_input, _globs))]
-pub fn scan_files_with_globs(_input: Vec<ChangedContent>, _globs: Vec<GlobEntry>) -> Vec<String> {
-    vec![]
+#[tracing::instrument(skip(input, globs))]
+pub fn scan_files_with_globs(input: Vec<ChangedContent>, globs: Vec<GlobEntry>) -> Vec<String> {
+    parse_all_blobs_sync(read_all_files_sync(
+        input
+            .into_iter()
+            .flat_map(|c| {
+                // Verify that the file is actually allowed by the globs
+                if let Some(ref file) = c.file {
+                    if !path_matches_globs(file, &globs) {
+                        return None;
+                    }
+                }
+
+                // ChangedContent is allowed
+                Some(c)
+            })
+            .collect(),
+    ))
 }
 
 fn read_changed_content(c: ChangedContent) -> Option<Vec<u8>> {

@@ -1,5 +1,8 @@
+use glob_match::glob_match;
 use std::iter;
 use std::path::{Path, PathBuf};
+
+use crate::GlobEntry;
 
 pub fn fast_glob(
     base_path: &Path,
@@ -134,6 +137,14 @@ pub fn get_fast_patterns(base_path: &Path, patterns: &Vec<String>) -> Vec<(PathB
     }
 
     optimized_patterns
+}
+
+pub fn path_matches_globs(path: &Path, globs: &[GlobEntry]) -> bool {
+    let path = format!("{}", path.display());
+
+    globs
+        .iter()
+        .any(|g| glob_match(&format!("{}/{}", g.base, g.glob), &path))
 }
 
 /// Given this input: a-{b,c}-d-{e,f}
