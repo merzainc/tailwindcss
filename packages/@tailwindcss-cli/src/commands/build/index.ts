@@ -273,7 +273,7 @@ async function createWatchers(globs: GlobEntry[], handle: (files: string[]) => v
   let d = disposables()
   function flush() {
     d.dispose()
-    d.queueMicrotask(() => {
+    d.queueMacrotask(() => {
       handle(Array.from(files))
       files.clear()
     })

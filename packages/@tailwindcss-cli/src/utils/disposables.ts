@@ -18,6 +18,14 @@ export function disposables() {
       })
     },
 
+    queueMacrotask(cb: () => void) {
+      let timer = setTimeout(cb, 0)
+
+      return api.add(() => {
+        clearTimeout(timer)
+      })
+    },
+
     add(dispose: () => void) {
       _disposables.add(dispose)
 
