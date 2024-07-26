@@ -1,4 +1,4 @@
-use napi::bindgen_prelude::{FromNapiValue, ToNapiValue};
+use napi::bindgen_prelude::*;
 use std::path::PathBuf;
 
 #[macro_use]
@@ -22,11 +22,22 @@ impl From<ChangedContent> for tailwindcss_oxide::ChangedContent {
 }
 
 #[derive(Debug, Clone)]
-#[napi(object)]
+#[napi]
 pub struct ScanResult {
   pub globs: Vec<GlobEntry>,
   pub files: Vec<String>,
   pub candidates: Vec<String>,
+}
+
+#[napi]
+impl ScanResult {
+  #[napi]
+  pub fn scan_files(&self, input: Vec<ChangedContent>) -> Vec<String> {
+    tailwindcss_oxide::scan_files_with_globs(
+      input.into_iter().map(Into::into).collect(),
+      self.globs.clone().into_iter().map(Into::into).collect(),
+    )
+  }
 }
 
 #[derive(Debug, Clone)]
@@ -34,6 +45,15 @@ pub struct ScanResult {
 pub struct GlobEntry {
   pub base: String,
   pub glob: String,
+}
+
+impl From<GlobEntry> for tailwindcss_oxide::GlobEntry {
+  fn from(globs: GlobEntry) -> Self {
+    tailwindcss_oxide::GlobEntry {
+      base: globs.base,
+      glob: globs.glob,
+    }
+  }
 }
 
 #[derive(Debug, Clone)]

@@ -444,6 +444,11 @@ pub fn scan_files(input: Vec<ChangedContent>, options: u8) -> Vec<String> {
     }
 }
 
+#[tracing::instrument(skip(_input, _globs))]
+pub fn scan_files_with_globs(_input: Vec<ChangedContent>, _globs: Vec<GlobEntry>) -> Vec<String> {
+    vec![]
+}
+
 fn read_changed_content(c: ChangedContent) -> Option<Vec<u8>> {
     if let Some(content) = c.content {
         return Some(content.into_bytes());
