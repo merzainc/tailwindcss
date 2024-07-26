@@ -40,7 +40,7 @@ pub fn fast_glob(
 /// tailwind --pwd ./project/pages --content "**/*.js"
 /// tailwind --pwd ./project/components --content "**/*.js"
 /// ```
-fn get_fast_patterns(base_path: &Path, patterns: &Vec<String>) -> Vec<(PathBuf, Vec<String>)> {
+pub fn get_fast_patterns(base_path: &Path, patterns: &Vec<String>) -> Vec<(PathBuf, Vec<String>)> {
     let mut optimized_patterns: Vec<(PathBuf, Vec<String>)> = vec![];
 
     for pattern in patterns {

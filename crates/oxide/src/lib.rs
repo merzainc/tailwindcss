@@ -3,6 +3,7 @@ use bstr::ByteSlice;
 use cache::Cache;
 use fxhash::FxHashSet;
 use glob::fast_glob;
+use glob::get_fast_patterns;
 use ignore::DirEntry;
 use ignore::WalkBuilder;
 use lazy_static::lazy_static;
@@ -80,7 +81,7 @@ pub fn scan_dir(opts: ScanOptions) -> ScanResult {
     };
 
     // If we have additional content paths, then we have to resolve them as well.
-    if !opts.content_paths.is_empty() {
+    if opts.output_globs && !opts.content_paths.is_empty() {
         let resolved_files: Vec<_> = match fast_glob(root, &opts.content_paths) {
             Ok(matches) => matches.filter_map(|x| x.canonicalize().ok()).collect(),
             Err(err) => {
@@ -91,16 +92,30 @@ pub fn scan_dir(opts: ScanOptions) -> ScanResult {
 
         files.extend(resolved_files);
 
-        let new_globs = opts
-            .content_paths
+        let optimized_incoming_globs = get_fast_patterns(root, &opts.content_paths)
             .iter()
-            .map(|x| GlobEntry {
-                base: root.display().to_string(),
-                glob: x.to_string(),
-            })
-            .collect::<Vec<_>>();
+            .flat_map(|(root, globs)| {
+                globs.iter().filter_map(|glob| {
+                    let root = match root.canonicalize() {
+                        Ok(root) => root,
+                        Err(err) => {
+                            event!(
+                                tracing::Level::ERROR,
+                                "Failed to canonicalize base path: {:?}",
+                                err
+                            );
+                            return None;
+                        }
+                    };
 
-        globs.extend(new_globs);
+                    let base = root.display().to_string();
+                    let glob = glob.to_string();
+                    Some(GlobEntry { base, glob })
+                })
+            })
+            .collect::<Vec<GlobEntry>>();
+
+        globs.extend(optimized_incoming_globs);
     }
 
     let mut cache = GLOBAL_CACHE.lock().unwrap();
