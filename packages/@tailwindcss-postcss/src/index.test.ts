@@ -245,8 +245,8 @@ describe('@content', () => {
 
     expect(result.messages).toContainEqual({
       type: 'dir-dependency',
-      dir: expect.stringMatching(/example-project$/),
-      glob: '../other-project/src/**/*.js',
+      dir: expect.stringMatching(/other-project\/src$/),
+      glob: '**/*.js',
       parent: expect.any(String),
       plugin: '@tailwindcss/postcss',
     })
